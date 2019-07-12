@@ -71,6 +71,7 @@ pub struct Config {
     env: Vec<(OsString, OsString)>,
     static_crt: Option<bool>,
     uses_cxx11: bool,
+    uses_pic: bool,
     always_configure: bool,
     no_build_target: bool,
     verbose_cmake: bool,
@@ -117,6 +118,7 @@ impl Config {
             env: Vec::new(),
             static_crt: None,
             uses_cxx11: false,
+            uses_pic: true,
             always_configure: true,
             no_build_target: false,
             verbose_cmake: false,
@@ -127,6 +129,12 @@ impl Config {
     /// Sets the build-tool generator (`-G`) for this compilation.
     pub fn generator<T: AsRef<OsStr>>(&mut self, generator: T) -> &mut Config {
         self.generator = Some(generator.as_ref().to_owned());
+        self
+    }
+
+    /// Sets whether the `-fPic` flag should be sets, defaults to true.
+    pub fn pic(&mut self, pic: bool) -> &mut Self {
+        self.uses_pic = pic;
         self
     }
 
@@ -296,6 +304,7 @@ impl Config {
         let mut c_cfg = cc::Build::new();
         c_cfg
             .cargo_metadata(false)
+            .pic(self.uses_pic)
             .opt_level(0)
             .debug(false)
             .target(&target)
@@ -305,6 +314,7 @@ impl Config {
         cxx_cfg
             .cargo_metadata(false)
             .cpp(true)
+            .pic(self.uses_pic)
             .opt_level(0)
             .debug(false)
             .target(&target)
